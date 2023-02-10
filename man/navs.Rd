@@ -12,7 +12,14 @@
 \usage{
 navs_tab(..., id = NULL, selected = NULL, header = NULL, footer = NULL)
 
-navs_pill(..., id = NULL, selected = NULL, header = NULL, footer = NULL)
+navs_pill(
+  ...,
+  id = NULL,
+  selected = NULL,
+  header = NULL,
+  footer = NULL,
+  li_classes = NULL
+)
 
 navs_pill_list(
   ...,
@@ -63,7 +70,8 @@ navs_pill_card(
   height = NULL,
   placement = c("above", "below"),
   full_screen = FALSE,
-  wrapper = card_body
+  wrapper = card_body,
+  li_classes = NULL
 )
 }
 \arguments{
