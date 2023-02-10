@@ -38,13 +38,16 @@ navs_tab_card <- function(..., id = NULL, selected = NULL, title = NULL,
 navs_pill_card <- function(..., id = NULL, selected = NULL, title = NULL,
                            header = NULL, footer = NULL, height = NULL,
                            placement = c("above", "below"),
-                           full_screen = FALSE, wrapper = card_body) {
+                           full_screen = FALSE, wrapper = card_body,
+                           li_classes = NULL) {
 
   items <- collect_nav_items(..., wrapper = wrapper)
 
+  if (is.null(li_classes)) li_classes <- seq_len(length(items))
+
   pills <- navs_pill(
     !!!items, id = id, selected = selected,
-    header = header, footer = footer
+    header = header, footer = footer, li_classes = li_classes
   )
 
   above <- match.arg(placement) == "above"

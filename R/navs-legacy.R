@@ -67,10 +67,10 @@ navs_tab <- function(..., id = NULL, selected = NULL,
 #' @export
 #' @rdname navs
 navs_pill <- function(..., id = NULL, selected = NULL,
-                      header = NULL, footer = NULL) {
+                      header = NULL, footer = NULL, li_classes = NULL) {
   pills <- tabsetPanel_(
     ..., type = "pills", id = id, selected = selected,
-    header = header, footer = footer
+    header = header, footer = footer, li_classes = li_classes
   )
   as_fragment(pills)
 }
@@ -304,13 +304,15 @@ tabsetPanel_ <- function(...,
                         selected = NULL,
                         type = c("tabs", "pills", "hidden"),
                         header = NULL,
-                        footer = NULL) {
+                        footer = NULL,
+                        li_classes = NULL) {
 
   if (!is.null(id))
     selected <- shiny::restoreInput(id = id, default = selected)
 
   type <- match.arg(type)
-  tabset <- buildTabset(..., ulClass = paste0("nav nav-", type), id = id, selected = selected)
+  tabset <- buildTabset(..., ulClass = paste0("nav nav-", type),
+                        id = id, selected = selected, li_classes = li_classes)
 
   tags$div(
     class = "tabbable",
@@ -426,7 +428,7 @@ navbarMenuTextFilter <- function(text) {
 # This function is called internally by navbarPage, tabsetPanel
 # and navlistPanel
 buildTabset <- function(..., ulClass, textFilter = NULL, id = NULL,
-                        selected = NULL, foundSelected = FALSE) {
+                        selected = NULL, foundSelected = FALSE, li_classes = NULL) {
 
   tabs <- dropNulls(list2(...))
   res <- findAndMarkSelectedTab(tabs, selected, foundSelected)
@@ -446,7 +448,7 @@ buildTabset <- function(..., ulClass, textFilter = NULL, id = NULL,
   tabsetId <- p_randomInt(1000, 10000)
   tabs <- lapply(seq_len(length(tabs)), buildTabItem,
                  tabsetId = tabsetId, foundSelected = foundSelected,
-                 tabs = tabs, textFilter = textFilter)
+                 tabs = tabs, textFilter = textFilter, li_classes = li_classes)
 
   tabNavList <- tags$ul(class = ulClass, id = id,
                         `data-tabsetid` = tabsetId, !!!lapply(tabs, "[[", "liTag"))
@@ -462,7 +464,7 @@ buildTabset <- function(..., ulClass, textFilter = NULL, id = NULL,
 # refactored for clarity and reusability). Called internally
 # by buildTabset.
 buildTabItem <- function(index, tabsetId, foundSelected, tabs = NULL,
-                         divTag = NULL, textFilter = NULL) {
+                         divTag = NULL, textFilter = NULL, li_classes = NULL) {
 
   divTag <- divTag %||% tabs[[index]]
 
@@ -486,7 +488,7 @@ buildTabItem <- function(index, tabsetId, foundSelected, tabs = NULL,
   }
 
   if (isTabPanel(divTag)) {
-    return(buildNavItem(divTag, tabsetId, index))
+    return(buildNavItem(divTag, tabsetId, index, li_class = li_classes[[index]]))
   }
 
   if (is_nav_item(divTag) || is_nav_spacer(divTag)) {
@@ -518,7 +520,7 @@ buildTabItem <- function(index, tabsetId, foundSelected, tabs = NULL,
   return(buildNavItem(divTag, tabsetId, index))
 }
 
-buildNavItem <- function(divTag, tabsetId, index) {
+buildNavItem <- function(divTag, tabsetId, index, li_class) {
   id <- paste("tab", tabsetId, index, sep = "-")
   # Get title attribute directory (not via tagGetAttribute()) so that contents
   # don't get passed to as.character().
@@ -532,7 +534,7 @@ buildNavItem <- function(divTag, tabsetId, index) {
   list(
     divTag = divTag,
     liTag = tagAddRenderHook(
-      liTag(id, title, value, attr(divTag, "_shiny_icon")),
+      liTag(li_class = li_class, id, title, value, attr(divTag, "_shiny_icon")),
       function(x) {
         if (isTRUE(getCurrentThemeVersion() >= 4)) {
           tagQuery(x)$
@@ -548,8 +550,8 @@ buildNavItem <- function(divTag, tabsetId, index) {
   )
 }
 
-liTag <- function(id, title, value, icon) {
-  tags$li(
+liTag <- function(li_class, id, title, value, icon) {
+  tags$li(class = li_class,
     tags$a(
       href = paste0("#", id),
       `data-toggle` = "tab",
